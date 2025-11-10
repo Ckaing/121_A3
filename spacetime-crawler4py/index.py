@@ -27,8 +27,7 @@ class Index:
 
     def fill_index(self, file):
         if len(self.index) > 0:
-            print("Index already filled.")
-            return
+            self._reset()
         with open(file, "r") as infile:
             # each line is in the format [token] -> id-freq id-freq id-freq
             for line in infile:
@@ -39,7 +38,7 @@ class Index:
                 posts = lines[1].split()
                 for p in posts:
                     entry = p.split('-')
-                    self.add_posting(lines[0], entry[0], entry[1])            
+                    self.add_posting(lines[0], entry[0], entry[1])
 
 
 class URLIndex(Index):
@@ -54,6 +53,6 @@ class URLIndex(Index):
 
     def get_id(self, url):
         return self.index[url]
-    
+
     def length(self):
         return self.count
