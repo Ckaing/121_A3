@@ -49,6 +49,15 @@ class Index:
                 for p in posts:
                     entry = p.split('-')
                     self.add_posting(lines[0], entry[0], entry[1])
+    
+    # TODO: write this function similar to fill_index but with additional
+    # checks for whether it is already in the index. Idk if we want to write
+    # it back to file at the end but I was thinking that we merge after every
+    # batch of urls we parse.
+    def merge(self, file):
+        """Read from file. If the token is in the current index, add the
+        postings from the token to current index. If token not in current
+        index, add token."""
 
 
 class URLIndex(Index):
@@ -63,10 +72,10 @@ class URLIndex(Index):
             self.index[self.id] = url
             self.id += 1
 
-    def get_url(self, id):
+    def get_url(self, id) -> str:
         """Returns url associated with id."""
         return self.index[id]
 
-    def length(self):
+    def length(self) -> int:
         """Returns number of index documents with unique ids."""
         return self.id
