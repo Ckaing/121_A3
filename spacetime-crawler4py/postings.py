@@ -8,5 +8,5 @@ class Posting:
     def __str__(self) -> str:
         post = []
         for id, freq in self.posting.items():
-            post.append(f"({id},{freq})")
+            post.append(f"{id}-{freq}")
         return " ".join(post)
