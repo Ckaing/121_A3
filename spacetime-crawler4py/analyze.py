@@ -26,12 +26,6 @@ def analysis(url, html_content):
     unique_pages.add(url)
 
     soup = BeautifulSoup(html_content, 'lxml')
-    # NOTE: I think we can remove this bc it didn't actually do anything
-    # getting rid of HTML 
-    # for tag in soup(['script', 'style', 'noscript', 'iframe', 'meta', 'link']):
-    #     tag.decompose()
-    # for tag in soup.find_all(True):
-    #     tag.attrs.clear()
 
     # do analysis
     text = soup.get_text(separator=' ', strip=True)
