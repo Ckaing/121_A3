@@ -10,7 +10,7 @@ class Index:
             self.index[token] = Posting()
 
     def write_to_file(self, file):
-        with open(file,"w") as outfile:
+        with open(file, "w") as outfile:
             for url, id in enumerate(self.index):
                 print(f"{id} - {url}", file=outfile)
         self._reset()
