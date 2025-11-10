@@ -6,10 +6,14 @@ class Index:
         self.index = {}
 
     def add_entry(self, token):
+        """Initializes token into self.index with a Posting object
+        if not already initialized."""
         if (token not in self.index):
             self.index[token] = Posting()
 
     def add_posting(self, token, urlid, freq):
+        """Adds entry into the Posting object associated with token, using
+        the docID and token frequency in that docID."""
         if (token not in self.index):
             print("Token not in index. Failed to add frequency.")
             return
@@ -17,15 +21,21 @@ class Index:
         post.add_entry(urlid, freq)
 
     def write_to_file(self, file):
+        """Writes the information in self.index into a file. Clears index
+        for next batch to be read in."""
         with open(file, "w") as outfile:
             for i, (token, post) in enumerate(self.index.items()):
                 print(f"{token} -> {post}", file=outfile)
         self._reset()
 
     def _reset(self):
+        """Private function that will clear the index of all its entries
+        so it can be used for the next batch of urls that are processed."""
         self.index = {}
 
     def fill_index(self, file):
+        """Reads from file and inputs each entry into the index. Resets
+        index before reading if index is already filled."""
         if len(self.index) > 0:
             self._reset()
         with open(file, "r") as infile:
@@ -44,15 +54,19 @@ class Index:
 class URLIndex(Index):
     def __init__(self):
         super().__init__()
-        self.count = 1
+        self.id = 1
 
     def add_entry(self, url):
+        """Adds a url to the index if not already in the list.
+        There is a unique ID for every url."""
         if (url not in self.index.values()):
-            self.index[self.count] = url
-            self.count += 1
+            self.index[self.id] = url
+            self.id += 1
 
-    def get_id(self, url):
-        return self.index[url]
+    def get_url(self, id):
+        """Returns url associated with id."""
+        return self.index[id]
 
     def length(self):
-        return self.count
+        """Returns number of index documents with unique ids."""
+        return self.id
