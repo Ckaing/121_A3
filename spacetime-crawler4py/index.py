@@ -48,9 +48,12 @@ class URLIndex(Index):
         self.count = 1
 
     def add_entry(self, url):
-        if (url not in self.index.keys()):
-            self.index[url] = self.count
+        if (url not in self.index.values()):
+            self.index[self.count] = url
             self.count += 1
 
     def get_id(self, url):
         return self.index[url]
+    
+    def length(self):
+        return self.count
