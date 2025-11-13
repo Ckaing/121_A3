@@ -60,9 +60,9 @@ class Index:
         index, add token."""
 
 
-class URLIndex(Index):
+class URLIndex:
     def __init__(self):
-        super().__init__()
+        self.index = {}
         self.id = 1
 
     def add_entry(self, url):
