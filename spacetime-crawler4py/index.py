@@ -21,9 +21,7 @@ class Index:
     def write_to_file(self, file):
         """Writes the information in self.index into a file. Clears index
         for next batch to be read in."""
-        with open(file, "w") as outfile:
-            for i, (token, post) in enumerate(self.index.items()):
-                print(f"{token} -> {post}", file=outfile)
+        #write here and reset after
         self._reset()
 
     def _reset(self):
@@ -36,26 +34,14 @@ class Index:
         index before reading if index is already filled."""
         if len(self.index) > 0:
             self._reset()
-        with open(file, "r") as infile:
-            # each line is in the format [token] -> id-freq id-freq id-freq
-            for line in infile:
-                # split line to separate the token and postings
-                lines = line.split(" -> ")
-                self.add_entry(lines[0])
-                # split the postings to get the info
-                posts = lines[1].split()
-                for p in posts:
-                    entry = p.split('-')
-                    self.add_posting(lines[0], entry[0], entry[1])
+        # read back into the object here
     
     # TODO: write this function similar to fill_index but with additional
     # checks for whether it is already in the index. Idk if we want to write
     # it back to file at the end but I was thinking that we merge after every
     # batch of urls we parse.
     def merge(self, file):
-        """Read from file. If the token is in the current index, add the
-        postings from the token to current index. If token not in current
-        index, add token."""
+        """Read from file and merges the tokens we read with the tokes in memory"""
 
 
 class URLIndex:
