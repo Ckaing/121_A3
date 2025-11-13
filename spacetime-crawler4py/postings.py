@@ -4,13 +4,10 @@ class Posting:
         self.fields = {}
         self.position = {}
 
-    def add_entry(self, docID, freq, fields : str[], positions : int[]):
+    def add_entry(self, docID, freq, fields: str, positions: int):
         self.posting[docID] = freq
         self.fields[docID] = fields
         self.position[docID] = positions
-
-    def __str__(self) -> str:
-        post = []
-        for id, freq in self.posting.items():
-            post.append(f"{id}-{freq}")
-        return " ".join(post)
+    
+ # write the encoding for writing to json files
+ # return the object as an explicit dict
