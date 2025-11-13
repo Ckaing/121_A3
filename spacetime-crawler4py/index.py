@@ -47,14 +47,14 @@ class Index:
 class URLIndex:
     def __init__(self):
         self.index = {}
-        self.id = 1
+        self.id = 0
 
     def add_entry(self, url):
         """Adds a url to the index if not already in the list.
         There is a unique ID for every url."""
         if (url not in self.index.values()):
-            self.index[self.id] = url
             self.id += 1
+            self.index[self.id] = url
 
     def get_url(self, id) -> str:
         """Returns url associated with id."""
