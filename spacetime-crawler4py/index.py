@@ -11,12 +11,13 @@ class Index:
         if (token not in self.index):
             self.index[token] = {}
 
-    def add_posting(self, token, docid):
+    def add_posting(self, token, docid, freq, fields, position):
         """Adds Posting obj to specified token with associated docID."""
         if (token not in self.index):
             self.index[token] = {}
         if (docid not in self.index[token].keys()):
             self.index[token][docid] = Posting()
+            self.index[token][docid].add_entry(freq, fields, position)
 
     def write_to_file(self, file):
         """Writes the information in self.index into a file. Clears index
