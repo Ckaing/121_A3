@@ -1,13 +1,12 @@
 class Posting:
     def __init__(self):
-        self.posting = {}
-        self.fields = {}
-        self.position = {}
+        self.freq = 0
+        self.fields = []
+        self.position = []
 
-    def add_entry(self, docID, freq, fields: str, positions: int):
-        self.posting[docID] = freq
-        self.fields[docID] = fields
-        self.position[docID] = positions
-    
- # write the encoding for writing to json files
- # return the object as an explicit dict
+    def add_entry(self, freq: int, fields, positions):
+        # change freq to tfidf later
+        self.freq = freq
+        self.fields = fields
+        self.position = positions
+
