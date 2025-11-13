@@ -63,3 +63,11 @@ class URLIndex:
     def length(self) -> int:
         """Returns number of index documents with unique ids."""
         return self.id
+    
+    def get_id(self, url) -> int:
+        """Returns the id associated with the url."""
+        ids = [id for id, val in self.index.items() if val == url]
+        if (len(ids) == 1):
+            return ids[0]
+        else:
+            raise Exception(IndexError, f"{url} not found in URL Index\n")
