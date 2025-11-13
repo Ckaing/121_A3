@@ -5,20 +5,18 @@ class Index:
     def __init__(self):
         self.index = {}
 
-    def add_entry(self, token):
+    def add_token(self, token):
         """Initializes token into self.index with a Posting object
         if not already initialized."""
         if (token not in self.index):
-            self.index[token] = Posting()
+            self.index[token] = {}
 
-    def add_posting(self, token, urlid, freq):
-        """Adds entry into the Posting object associated with token, using
-        the docID and token frequency in that docID."""
+    def add_posting(self, token, docid):
+        """Adds Posting obj to specified token with associated docID."""
         if (token not in self.index):
-            print("Token not in index. Failed to add frequency.")
-            return
-        post = self.index[token]
-        post.add_entry(urlid, freq)
+            self.index[token] = {}
+        if (docid not in self.index[token].keys()):
+            self.index[token][docid] = Posting()
 
     def write_to_file(self, file):
         """Writes the information in self.index into a file. Clears index
