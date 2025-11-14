@@ -65,7 +65,9 @@ def analysis(url, html_content):
     # update inverted index with lock
     with json_index_lock:
         for token, count in freq.items():
-            json_index.add_posting(token, doc_id, count)
+            fields = [element.name for element in soup.find_all(['h1', 'h2', 'h3', 'title', 'strong'])
+                        if token in element.get_text()]
+            json_index.add_posting(token, doc_id, count, fields)
 
     # update subdomains
     parsed = urlparse(url)
