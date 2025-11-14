@@ -31,7 +31,7 @@ class Index:
         if (token not in self.index):
             self.index[token] = Posting()
 
-    def add_posting(self, token, docid, freq, fields=None, position=None): # Temporary fields and position to None for testing
+    def add_posting(self, token, docid, freq, fields, position=None): # Temporary fields and position to None for testing
         """Adds Posting obj to specified token with associated docID."""
         if (token not in self.index):
             self.index[token] = {}
@@ -40,38 +40,20 @@ class Index:
             self.index[token][docid].add_entry(freq, fields, position)
 
     def write_to_file(self, file):
-        """Writes the information in self.index into a json file. Clears index
-        for next batch to be read in."""
+        """Sorts the index by the tokens. Writes the information in self.index
+        into a json file. Clears index for next batch to be read in."""
         with open(file, "w") as outfile:
-            outfile.write(json.dumps(self.index, default=custom_encoder))
+            outfile.write(json.dumps(dict(sorted(self.index.items())), default=custom_encoder))
         self._reset()
 
     def _reset(self):
         """Private function that will clear the index of all its entries
         so it can be used for the next batch of urls that are processed."""
         self.index = {}
-
-    def fill_index(self, file):
-        """Reads from file and inputs each entry into the index. Resets
-        index before reading if index is already filled."""
-        if len(self.index) > 0:
-            self._reset()
-        with open(file, "r") as infile:
-            # each line is in the format [token] -> id-freq id-freq id-freq
-            for line in infile:
-                # split line to separate the token and postings
-                lines = line.split(" -> ")
-                self.add_entry(lines[0])
-                # split the postings to get the info
-                posts = lines[1].split()
-                for p in posts:
-                    entry = p.split('-')
-                    self.add_posting(lines[0], entry[0], entry[1])
     
-    # TODO: write this function similar to fill_index but with additional
-    # checks for whether it is already in the index. Idk if we want to write
-    # it back to file at the end but I was thinking that we merge after every
-    # batch of urls we parse.
+    # TODO:
+    # checks for whether token is already in the index and check if id in the token's
+    # dictionary and if not, then add an entry. sort at the very end.
     def merge(self, file):
         """Read from file. If the token is in the current index, add the
         postings from the token to current index. If token not in current
