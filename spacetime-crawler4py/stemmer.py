@@ -14,6 +14,16 @@ class Stemmer:
         return {
             # add words that we want to keep the same, NOT stemmed
             # i.e. news -> news, universal -> universal (not univers), etc.
+            "repository": "repository",
+            "machine": "machine",
+            "database": "database",
+            "series": "series",
+            "instances": "instance",
+            "attribute": "attribute",
+            "categorical": "category",
+            "integer": "integer",
+            "missing": "missing",
+            "university": "university"
         }
 
     def stem(self, token):
@@ -24,7 +34,7 @@ class Stemmer:
             results = self.exceptions[token.lower()]
             self.cache[token] = results
             return results
-        
+
         stemmed_word = self.stemmer.stem(token)
         self.cache[token] = stemmed_word
         return stemmed_word
