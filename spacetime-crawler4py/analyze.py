@@ -1,7 +1,11 @@
 from urllib.parse import urldefrag, urlparse
 from bs4 import BeautifulSoup
+from index_vars import json_index, URL_id_index, url_index_lock, json_index_lock
+from threading import Lock
+import os
 
 import tokenizer
+
 
 
 # globals for analysis
@@ -10,6 +14,19 @@ longest_page = 0
 longest_page_url = ""
 word_freq = {}
 subdomains = {}
+word_freq_lock = Lock()
+
+
+def get_file_size_in_kb(file_path):
+    """
+    Returns the size of a file in kilobytes.
+    """
+    if os.path.exists(file_path):
+        file_size_bytes = os.path.getsize(file_path)
+        file_size_kb = file_size_bytes / 1024
+        return file_size_kb
+    else:
+        return None
 
 def analysis(url, html_content):
     """
@@ -25,6 +42,11 @@ def analysis(url, html_content):
     url, _ = urldefrag(url)
     unique_pages.add(url)
 
+    # Add url to URL index while protected
+    with url_index_lock:
+        URL_id_index.add_entry(url)
+        doc_id = URL_id_index.get_id(url)
+
     soup = BeautifulSoup(html_content, 'lxml')
 
     # do analysis
@@ -36,13 +58,20 @@ def analysis(url, html_content):
         longest_page = word_count
         longest_page_url = url
 
-    # update word frequencies
-    word_freq = tokenizer.union_freq(word_freq, freq)
+    # update word frequencies with lock
+    with word_freq_lock:
+        word_freq = tokenizer.union_freq(word_freq, freq)
+
+    # update inverted index with lock
+    with json_index_lock:
+        for token, count in freq.items():
+            json_index.add_posting(token, doc_id, count)
 
     # update subdomains
     parsed = urlparse(url)
     if "uci.edu" in parsed.netloc:
         subdomains[parsed.netloc] = subdomains.get(parsed.netloc, 0) + 1
+
 
 
 def write_analysis_to_file(file_name='report.txt'):
@@ -56,34 +85,22 @@ def write_analysis_to_file(file_name='report.txt'):
     global longest_page, longest_page_url, word_freq, subdomains, unique_pages
 
     with open(file_name, 'w', encoding='utf-8') as report:
-        print("CRAWLER ANALYSIS RESULTS", file=report)
+        print("INVERTED INDEX RESULTS", file=report)
         print("-" * 40, file=report)
         print(file=report)
 
-        # Q1 Number of unique pages
-        print(f"Number of unique pages crawled: {len(unique_pages)}", file=report)
-        print(file=report)
+        # Q1 Number of indexed documents
+        print(f"Number of indexed documents: {URL_id_index.id}", file=report)
 
-        print(f"Number of total words: {len(word_freq)}", file=report)
+        # Q2 Number of unique tokens
+        print(f"Number of unique tokens: {len(word_freq)}", file=report)
 
-        # Q2 Longest page
-        print(f"Longest page: {longest_page} words", file=report)
-        print(f"URL: {longest_page_url}", file=report)
-        print(file=report)
+        # Q3 Size of index on disk
+        index_size_kb = get_file_size_in_kb('./inverted_index.json')
+        if index_size_kb is not None:
+            print(f"Size of index on disk: {index_size_kb:.2f} KB", file=report)
+        else:
+            print("Index file not found on disk.", file=report)
 
-        # Q3 Top 50 most common words
-        print("Top 50 most common words:", file=report)
-        print("-" * 40, file=report)
-        sorted_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
-        for i, (word, freq) in enumerate(sorted_words[:50], 1):
-            print(f"{i:2d}. {word:20s} {freq:,}", file=report)
-        print(file=report)
-
-        # Q4 Subdomain distribution (sorted alphabetically)
-        print("Subdomain distribution under uci.edu:", file=report)
-        print("-" * 40, file=report)
-        sorted_subdomains = sorted(subdomains.items())
-        for subdomain, count in sorted_subdomains:
-            print(f"{subdomain}, {count}", file=report)
         print(file=report)
 

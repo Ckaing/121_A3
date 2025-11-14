@@ -1,3 +1,4 @@
+from index import Posting, URLIndex, Index
 def compute_text_frequencies(text):
     """
     Description: Streamlines the computation from text to frequency dictionary

@@ -2,6 +2,7 @@ from postings import Posting
 import json
 
 def custom_encoder(obj):
+    """Encodes Posting objects into a dictionary for JSON serialization."""
     if isinstance(obj, Posting):
         return {
             'freq': obj.freq,
@@ -11,6 +12,7 @@ def custom_encoder(obj):
     raise TypeError("Object of type %s is not JSON serializable" % type(obj).__name__)
 
 def custom_decoder(dct):
+    """Decodes a dictionary into a Posting object if applicable."""
     if 'freq' in dct and 'fields' in dct and 'position' in dct:
         post = Posting()
         post.freq = dct['freq']
@@ -29,7 +31,7 @@ class Index:
         if (token not in self.index):
             self.index[token] = Posting()
 
-    def add_posting(self, token, docid, freq, fields, position):
+    def add_posting(self, token, docid, freq, fields=None, position=None): # Temporary fields and position to None for testing
         """Adds Posting obj to specified token with associated docID."""
         if (token not in self.index):
             self.index[token] = {}
@@ -79,7 +81,7 @@ class Index:
 class URLIndex(Index):
     def __init__(self):
         super().__init__()
-        self.id = 1
+        self.id = 0
 
     def add_entry(self, url):
         """Adds a url to the index if not already in the list.

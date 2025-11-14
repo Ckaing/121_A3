@@ -7,8 +7,10 @@ from argparse import ArgumentParser
 
 from utils.config import Config
 from crawler import Crawler
-
+from index_vars import json_index, URL_id_index
 from analyze import write_analysis_to_file
+
+
 
 
 def main(config_file, restart, json_dir=None):
@@ -27,8 +29,11 @@ def main(config_file, restart, json_dir=None):
 
     crawler = Crawler(config, restart)
     crawler.start()
+
     # write our analysis when our crawler ends
     write_analysis_to_file()
+    json_index.write_to_file(file="inverted_index.json")
+    URL_id_index.write_to_file(file="url_id_index.json")
 
 
 if __name__ == "__main__":
