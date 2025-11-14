@@ -1,4 +1,10 @@
 from index import Posting, URLIndex, Index
+from stemmer import Stemmer
+
+
+stemmer = Stemmer()
+
+
 def compute_text_frequencies(text):
     """
     Description: Streamlines the computation from text to frequency dictionary
@@ -52,10 +58,10 @@ def compute_word_frequencies(tokens):
     """
     freq = {}
     for token in tokens:
-        #add porter stemming function call here to convert token into stem
-        if token not in freq:
-            freq[token] = 0
-        freq[token] += 1
+        word = stemmer.stem(token)
+        if word not in freq:
+            freq[word] = 0
+        freq[word] += 1
     return freq
 
 
@@ -70,9 +76,3 @@ def union_freq(freq1, freq2):
     for key in freq1.keys() | freq2.keys(): 
         result[key] = freq1.get(key, 0) + freq2.get(key, 0)
     return result
-
-
-def stem(token):
-    t = token
-    #implement stemming here
-    return t
