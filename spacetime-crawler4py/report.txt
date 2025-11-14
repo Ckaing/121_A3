@@ -1,0 +1,7 @@
+INVERTED INDEX RESULTS
+----------------------------------------
+
+Number of indexed documents: 53792
+Number of unique tokens: 278678
+Size of index on disk: 413599.93 KB
+
