@@ -31,9 +31,9 @@ def main(config_file, restart, json_dir=None):
     crawler.start()
 
     # write our analysis when our crawler ends
-    write_analysis_to_file()
     json_index.write_to_file(file="inverted_index.json")
     URL_id_index.write_to_file(file="url_id_index.json")
+    write_analysis_to_file()
 
 
 if __name__ == "__main__":
