@@ -35,7 +35,7 @@ def tokenize(content):
     content = content.lower()
 
     for c in content:
-        if 'a' <= c and c <= 'z': 
+        if c.isalnum():
             word += c
         else:
             if len(word) > 2:
