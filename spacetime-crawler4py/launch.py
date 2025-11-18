@@ -10,7 +10,7 @@ from utils.config import Config
 from crawler import Crawler
 from index_vars import json_index, URL_id_index
 from analyze import write_analysis_to_file
-from query import query, user_input, extract_terms
+from query import query, user_input, extract_terms, print_query_results
 
 
 
@@ -58,3 +58,9 @@ if __name__ == "__main__":
                        help="Path to directory containing JSON files")
     args = parser.parse_args()
     main(args.config_file, args.restart, args.json_dir)
+
+    '''Example query usage after crawler ends:
+    str_input = user_input()
+    top_urls = query(extract_terms(str_input))
+    print_query_results(top_urls)
+    '''

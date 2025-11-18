@@ -29,8 +29,18 @@ def tokenize(content):
     """
     import re
     # Extract 3+ character alphanumeric sequences
-    tokens = re.findall(r'\b[a-z0-9]{2,}\b', content.lower())
+    tokens = re.findall(r'\b[a-z0-9]{3,}\b', content.lower())
     return tokens
+
+def tokenize_and_stem(content):
+    """
+    Description: Breaks content down into tokens AND stems them
+
+    Input: The string to tokenize
+    Output: A list of stemmed tokens
+    """
+    tokens = tokenize(content)
+    return [stemmer.stem(token) for token in tokens]
 
 
 def compute_word_frequencies(tokens):
