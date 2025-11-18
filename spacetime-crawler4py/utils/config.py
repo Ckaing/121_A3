@@ -15,7 +15,7 @@ class Config(object):
         self.json_dir = config.get("CRAWLER", "JSON_DIR", fallback="./json_files")
         
         # Time delay between processing files
-        self.time_delay = config.getfloat("CRAWLER", "POLITENESS", fallback=0.01)
+        self.time_delay = config.getfloat("CRAWLER", "POLITENESS", fallback=0.0)
 
     def set_json_dir(self, json_dir):
         """Set JSON directory from command line argument"""

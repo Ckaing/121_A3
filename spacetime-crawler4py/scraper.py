@@ -2,10 +2,16 @@ import re
 import json
 from pathlib import Path
 from bs4 import BeautifulSoup
-from urllib.parse import unquote, urlparse, urlunparse, parse_qs, urlencode, urljoin, urldefrag
+from urllib.parse import urlparse, parse_qs, urlencode, urljoin, urldefrag
+from bs4 import XMLParsedAsHTMLWarning
+
+import warnings
+
 
 from analyze import analysis
 
+# Suppress XML warnings
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 
 def scraper(filepath, json_dir, url_to_file_map):
@@ -30,18 +36,16 @@ def normalize_url(url):
     Output: Normalized url with share/utm_ removed if present
     """
     parsed = urlparse(url)
-    qs = parse_qs(parsed.query)
+    qs = parse_qs(parsed.query, keep_blank_values=False)
 
     # Remove tracking params
-    for key in list(qs.keys()):
-        if key.lower() == "share" or key.lower().startswith("utm_"):
-            qs.pop(key)
+    qs = {k: v for k, v in qs.items() 
+          if not (k.lower() == "share" or k.lower().startswith("utm_"))}
 
     # Rebuild the query string
-    new_query = urlencode(qs, doseq=True)
+    new_query = urlencode(qs, doseq=True) if qs else ''
     normalized = parsed._replace(query=new_query)
-    return urlunparse(normalized)
-
+    return normalized.geturl()
 
 def extract_next_links(filepath, json_dir, url_to_file_map):
     """ 
@@ -57,20 +61,28 @@ def extract_next_links(filepath, json_dir, url_to_file_map):
 
         # Extract HTML content and URL from JSON
         html_content = data.get('content', '')
-        url = data.get('url', str(filepath))
+        url = data.get('url')
         
-        if not html_content:
+        if not html_content or not url:
+            return []
+        
+        if len(html_content) < 500:
             return []
 
         # do analysis
         analysis(url, html_content)
 
         # parse with BeautifulSoup for links
-        soup = BeautifulSoup(html_content, 'lxml')
+        soup = BeautifulSoup(html_content, 'html.parser')
         found_files = []
         # extract links from HTML content
         for a in soup.find_all('a', href=True):
             href = a['href']
+
+            # Skip empty hrefs and fragments
+            if not href or href.startswith('#') or href.startswith('javascript:'):
+                continue
+
             try:
                 # Convert relative URLs to absolute using the page's URL
                 absolute_url = urljoin(url, href)
@@ -82,16 +94,15 @@ def extract_next_links(filepath, json_dir, url_to_file_map):
                 absolute_url = normalize_url(absolute_url)
                 
                 # Look up the corresponding file in our mapping
-                if absolute_url in url_to_file_map:
-                    target_file = url_to_file_map[absolute_url]
+                target_file = url_to_file_map.get(absolute_url)
+                if target_file:
                     found_files.append(target_file)
 
             except Exception as e:
                 continue
 
         return found_files
-    except (json.JSONDecodeError, FileNotFoundError, KeyError) as e:
-        print(f"Error processing {filepath}: {e}")
+    except Exception as e:
         return []
 
 
@@ -103,21 +114,12 @@ def is_valid(filepath):
     Output: True if we decide to process; False otherwise
     """
     try:
-        path = Path(filepath)
-        
-        # Must be a JSON file
-        if path.suffix != '.json':
+        # Fast path check
+        if not filepath.endswith('.json'):
             return False
         
-        # Must exist (convert to absolute path to be sure)
-        if not path.exists():
-            # Try as absolute path
-            abs_path = path.resolve()
-            if not abs_path.exists():
-                return False
-        
-        return True
+        path = Path(filepath)
+        return path.exists()
     
-    except Exception as e:
-        print(f"Error validating {filepath}: {e}")
+    except Exception:
         return False

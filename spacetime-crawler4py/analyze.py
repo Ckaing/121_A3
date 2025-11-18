@@ -10,10 +10,7 @@ import tokenizer
 
 # globals for analysis
 unique_pages = set()
-longest_page = 0
-longest_page_url = ""
 word_freq = {}
-subdomains = {}
 word_freq_lock = Lock()
 
 
@@ -31,12 +28,12 @@ def get_file_size_in_kb(file_path):
 def analysis(url, html_content):
     """
     Description: Analyzes a page for the report, updating global values
-    unique_pages, longest_page, longest_page_url, word_freq, subdomains, 
+    unique_pages, word_freq, and json_index.
 
     Input: The url of the page that we are analyzing and its content
     Output: None; updates global parameters
     """
-    global longest_page, longest_page_url, word_freq, subdomains, unique_pages
+    global word_freq, unique_pages
 
     # defragment URL
     url, _ = urldefrag(url)
@@ -47,16 +44,11 @@ def analysis(url, html_content):
         URL_id_index.add_entry(url)
         doc_id = URL_id_index.get_id(url)
 
-    soup = BeautifulSoup(html_content, 'lxml')
+    soup = BeautifulSoup(html_content, 'html.parser')
 
     # do analysis
     text = soup.get_text(separator=' ', strip=True)
-    word_count, freq = tokenizer.compute_text_frequencies(text)
-
-    # update longest page
-    if word_count > longest_page:
-        longest_page = word_count
-        longest_page_url = url
+    _ , freq = tokenizer.compute_text_frequencies(text)
 
     # update word frequencies with lock
     with word_freq_lock:
@@ -64,15 +56,15 @@ def analysis(url, html_content):
 
     # update inverted index with lock
     with json_index_lock:
+        important_text = set()
+        for tag in soup.find_all(['h1', 'h2', 'h3', 'title', 'strong']):
+            tag_tokens = tokenizer.tokenize(tag.get_text())
+            important_text.update(tag_tokens)
+
         for token, count in freq.items():
-            fields = [element.name for element in soup.find_all(['h1', 'h2', 'h3', 'title', 'strong'])
-                        if token in element.get_text()]
+            fields = ['important'] if token in important_text else []
             json_index.add_posting(token, doc_id, count, fields)
 
-    # update subdomains
-    parsed = urlparse(url)
-    if "uci.edu" in parsed.netloc:
-        subdomains[parsed.netloc] = subdomains.get(parsed.netloc, 0) + 1
 
 
 
@@ -84,7 +76,7 @@ def write_analysis_to_file(file_name='report.txt'):
     Input: The file name to write to, defaulted to report.txt
     Output: None; prints to file
     """
-    global longest_page, longest_page_url, word_freq, subdomains, unique_pages
+    global word_freq, unique_pages
 
     with open(file_name, 'w', encoding='utf-8') as report:
         print("INVERTED INDEX RESULTS", file=report)

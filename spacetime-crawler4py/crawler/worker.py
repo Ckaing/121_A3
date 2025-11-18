@@ -16,14 +16,14 @@ class Worker(Thread):
     def run(self):
         url_to_file_map = self.frontier.get_url_to_file_map()
 
+        # Process files in batches for better performance
+        processed = 0
+
         while True:
             tbd_file = self.frontier.get_tbd_url()
             if not tbd_file:
-                self.logger.info("Frontier is empty. Stopping Crawler.")
+                self.logger.info(f"Frontier is empty. Processed {processed} files.")
                 break
-
-            # Small delay to prevent overwhelming the system
-            time.sleep(0.01)
 
             # Process the JSON file
             try:
@@ -38,6 +38,11 @@ class Worker(Thread):
                     self.frontier.add_url(scraped_file)
                     
                 self.frontier.mark_url_complete(tbd_file)
+                processed += 1
+
+                # Log progress every 1000 files instead of every file
+                if processed % 1000 == 0:
+                    self.logger.info(f"Processed {processed} files")
                 
             except Exception as e:
                 self.logger.error(f"Error processing {tbd_file}: {e}")

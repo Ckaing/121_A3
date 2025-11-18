@@ -1,4 +1,3 @@
-from index import Posting, URLIndex, Index
 from stemmer import Stemmer
 
 
@@ -28,23 +27,9 @@ def tokenize(content):
     Input: The string to tokenize
     Output: A list of tokens
     """
-    tokens = []
-    word = ''
-
-    # remove case sensitivity
-    content = content.lower()
-
-    for c in content:
-        if c.isalnum():
-            word += c
-        else:
-            if len(word) > 2:
-                tokens.append(word)
-            word = ''
-
-    if len(word) > 2:
-        tokens.append(word)
-
+    import re
+    # Extract 3+ character alphanumeric sequences
+    tokens = re.findall(r'\b[a-z0-9]{2,}\b', content.lower())
     return tokens
 
 
