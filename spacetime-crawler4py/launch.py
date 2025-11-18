@@ -39,10 +39,10 @@ def main(config_file, restart, json_dir=None):
     indexer.merge_all_buckets(cleanup_temp=True)
 
     # write our analysis when our crawler ends
-    print("\n--- Final Statistics ---", file="report.txt")
+    print("\n--- Final Statistics ---")
     stats = indexer.get_final_stats()
     for bucket, info in sorted(stats.items()):
-        print(f"Bucket '{bucket}': {info['terms']} terms, {info['file_size_mb']:.2f} MB", file="report.txt")
+        print(f"Bucket '{bucket}': {info['terms']} terms, {info['file_size_mb']:.2f} MB")
 
     json_index.write_to_file(file="inverted_index.json")
     URL_id_index.write_to_file(file="url_id_index.json")
@@ -61,11 +61,21 @@ def main(config_file, restart, json_dir=None):
 
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method('fork', force=True)
+    # multiprocessing.set_start_method('fork', force=True)
     parser = ArgumentParser()
     parser.add_argument("--restart", action="store_true", default=False)
     parser.add_argument("--config_file", type=str, default="config.ini")
     parser.add_argument("--json_dir", type=str, required=True, 
                        help="Path to directory containing JSON files")
     args = parser.parse_args()
-    main(args.config_file, args.restart, args.json_dir)
+    # main(args.config_file, args.restart, args.json_dir)
+    total_terms = 0
+    total_size = 0
+    print("\n--- Final Statistics ---")
+    stats = indexer.get_final_stats()
+    for bucket, info in sorted(stats.items()):
+        print(f"Bucket '{bucket}': {info['terms']} terms, {info['file_size_mb']:.2f} MB")
+        total_terms += info['terms']
+        total_size += info['file_size_mb']
+    print(f"Total Tokens: {total_terms}")
+    print(f"Total Size: {total_size}")
