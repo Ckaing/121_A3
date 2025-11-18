@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from index_vars import json_index, URL_id_index, url_index_lock, json_index_lock
 from threading import Lock
 import os
+from batch_index import BatchIndexer
 
 import tokenizer
 
@@ -12,6 +13,9 @@ import tokenizer
 unique_pages = set()
 word_freq = {}
 word_freq_lock = Lock()
+indexer = BatchIndexer()
+BATCH_SIZE = 5500
+batch_cnt = 0
 
 
 def get_file_size_in_kb(file_path):
@@ -25,6 +29,7 @@ def get_file_size_in_kb(file_path):
     else:
         return None
 
+
 def analysis(url, html_content):
     """
     Description: Analyzes a page for the report, updating global values
@@ -33,7 +38,11 @@ def analysis(url, html_content):
     Input: The url of the page that we are analyzing and its content
     Output: None; updates global parameters
     """
-    global word_freq, unique_pages
+    global word_freq, unique_pages, batch_cnt
+    
+    if (batch_cnt % BATCH_SIZE == 0):
+        batch_cnt = 0
+        indexer.save_batch_to_disk()
 
     # defragment URL
     url, _ = urldefrag(url)
@@ -63,9 +72,8 @@ def analysis(url, html_content):
 
         for token, count in freq.items():
             fields = ['important'] if token in important_text else []
-            json_index.add_posting(token, doc_id, count, fields)
-
-
+            indexer.add_document(doc_id, token, count, fields)
+    batch_cnt += 1
 
 
 def write_analysis_to_file(file_name='report.txt'):
