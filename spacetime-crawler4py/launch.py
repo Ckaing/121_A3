@@ -1,5 +1,6 @@
 
 import json
+import time
 import multiprocessing
 from pathlib import Path
 from configparser import ConfigParser
@@ -9,6 +10,7 @@ from utils.config import Config
 from crawler import Crawler
 from index_vars import json_index, URL_id_index
 from analyze import write_analysis_to_file
+from query import query, user_input, extract_terms
 
 
 
@@ -34,6 +36,17 @@ def main(config_file, restart, json_dir=None):
     json_index.write_to_file(file="inverted_index.json")
     URL_id_index.write_to_file(file="url_id_index.json")
     write_analysis_to_file()
+
+    # get user input and query
+    user_in = user_input()
+    # keep track of query time after user clicks enter
+    start_time = time.time()
+    tokens = extract_terms(user_in)
+    urls = query(tokens)
+    ### print/display the urls here ###
+    end_time = time.time()
+    time_elapsed = end_time - start_time
+    print(f"Total query time for '{user_in}': {time_elapsed:.2f} seconds")
 
 
 if __name__ == "__main__":
