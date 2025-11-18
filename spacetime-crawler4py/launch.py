@@ -42,7 +42,7 @@ def main(config_file, restart, json_dir=None):
     # keep track of query time after user clicks enter
     start_time = time.time()
     tokens = extract_terms(user_in)
-    query(tokens)
+    urls = query(tokens)
     ### print/display the urls here ###
     end_time = time.time()
     time_elapsed = end_time - start_time
