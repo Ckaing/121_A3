@@ -1,5 +1,6 @@
 from postings import Posting
 import json
+import string
 
 def custom_encoder(obj):
     """Encodes Posting objects into a dictionary for JSON serialization."""
@@ -25,39 +26,58 @@ class Index:
     def __init__(self):
         self.index = {}
 
-    def add_entry(self, token):
-        """Initializes token into self.index with a Posting object
+        for letter in string.ascii_lowercase:
+            self.index[letter] = {}
+        self.index["0-9"] = {}
+
+    def _get_dict_bucket(self, word):
+        first_char = word[0].lower()
+        if first_char >= 'a' and first_char <= 'z':
+            return first_char
+        else:
+            return "0-9"
+        
+    def _get_bucket_file(self, letter):
+        """Returns the file name for the bucket"""
+        return f"index/{letter}"
+
+    def add_entry(self, token, docid, freq, fields, position=None):
+        """Initializes token into self.index[bucket] with a Posting object
         if not already initialized."""
-        if (token not in self.index):
-            self.index[token] = Posting()
+        bucket = self._get_dict_bucket(token)
+        # ensure token is in the bucket, adds if not
+        if token not in self.index[bucket]:
+            self.index[bucket][token] = {}
+            
+        # ensures docid is in token dict, initializes if not
+        if docid not in self.index[bucket][token]:
+            self.index[bucket][token][docid] = Posting()
 
-    def add_posting(self, token, docid, freq, fields, position=None): # Temporary fields and position to None for testing
-        """Adds Posting obj to specified token with associated docID."""
-        if (token not in self.index):
-            self.index[token] = {}
-        if (docid not in self.index[token].keys()):
-            self.index[token][docid] = Posting()
-            self.index[token][docid].add_entry(freq, fields, position)
-
-    def write_to_file(self, file):
-        """Sorts the index by the tokens. Writes the information in self.index
-        into a json file. Clears index for next batch to be read in."""
-        with open(file, "w") as outfile:
-            outfile.write(json.dumps(dict(sorted(self.index.items())), default=custom_encoder))
-        self._reset()
+        # add to the posting of the docid for the token
+        self.index[bucket][token][docid].add_entry(freq, fields, position)
 
     def _reset(self):
         """Private function that will clear the index of all its entries
         so it can be used for the next batch of urls that are processed."""
-        self.index = {}
-    
-    # TODO:
-    # checks for whether token is already in the index and check if id in the token's
-    # dictionary and if not, then add an entry. sort at the very end.
-    def merge(self, file):
-        """Read from file. If the token is in the current index, add the
-        postings from the token to current index. If token not in current
-        index, add token."""
+        for letter in self.index:
+            self.index[letter] = {}
+
+    def write_to_file(self):
+        """Iterates each bucket. Opens the file for that bucket. Loads data from file.
+        Merge the current data with the data loaded. Write back to file. Reset index at the end"""
+        for letter in self.index:
+            file = self._get_bucket_file(letter)
+            with open(file, "w+") as outfile:
+                partial_data = json.load(outfile)
+                for term, posting in self.index[letter].items():
+                    if term not in partial_data:
+                        partial_data[term] = {}
+                    for id, post in posting.items():
+                        if id not in partial_data[term]:
+                            partial_data[term][id] = Posting()
+                        partial_data[term][id].add_entry(post.freq, post.fields, post.position)
+                outfile.write(json.dumps(dict(sorted(partial_data.items())), default=custom_encoder))
+        self._reset()
 
 
 class URLIndex(Index):

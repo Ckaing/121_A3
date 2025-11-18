@@ -4,7 +4,7 @@ class Posting:
         self.fields = []
         self.position = []
 
-    def add_entry(self, freq: int, fields, positions):
+    def add_entry(self, freq, fields, positions=None):
         # change freq to tfidf later
         self.freq = freq
         self.fields = fields
