@@ -1,6 +1,6 @@
 from urllib.parse import urldefrag, urlparse
 from bs4 import BeautifulSoup
-from index_vars import json_index, URL_id_index, url_index_lock, json_index_lock
+from index_vars import URL_id_index, url_index_lock, json_index_lock
 from threading import Lock
 import os
 from index import BatchIndexer
@@ -98,7 +98,7 @@ def write_analysis_to_file(file_name='report.txt'):
         print(f"Number of unique tokens: {len(word_freq)}", file=report)
 
         # Q3 Size of index on disk
-        index_size_kb = get_file_size_in_kb('./inverted_index.json')
+        index_size_kb = get_file_size_in_kb('./main_index/')
         if index_size_kb is not None:
             print(f"Size of index on disk: {index_size_kb:.2f} KB", file=report)
         else:

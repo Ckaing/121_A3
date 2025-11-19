@@ -4,10 +4,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, parse_qs, urlencode, urljoin, urldefrag
 from bs4 import XMLParsedAsHTMLWarning
-
 import warnings
-
-
 from analyze import analysis
 
 # Suppress XML warnings
