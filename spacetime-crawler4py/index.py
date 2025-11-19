@@ -31,65 +31,69 @@ class BatchIndexer:
     Final merge combines all partial indexes into one JSON file per bucket.
     """
     
-    def __init__(self, output_dir='index_output', temp_dir='index_temp'):
+    def __init__(self, output_dir='main_index', temp_dir='temp'):
         self.output_dir = output_dir
         self.temp_dir = temp_dir
         self.bucket_keys = list(string.ascii_lowercase) + ['0-9']
         
-        # Create directories
+        # create directories for the index
         os.makedirs(output_dir, exist_ok=True)
         os.makedirs(temp_dir, exist_ok=True)
         
-        # Track partial index files for each bucket
+        # track partial index files for each bucket
         self.partial_files = {bucket: [] for bucket in self.bucket_keys}
         self.batch_count = 0
         
-        # Current batch index (accumulates documents until save_batch_to_disk)
+        # current batch's index
         self.current_batch = self._initialize_bucketed_index()
     
-    def _get_bucket_key(self, term):
-        """Return which bucket a term belongs to"""
-        if not term:
-            return '0-9'
-        first_char = term[0].lower()
+    def _get_bucket_key(self, token):
+        """Return which bucket a token belongs to"""
+        # if not token:
+        #     return '0-9'
+        first_char = token[0].lower()
         return first_char if first_char.isalpha() else '0-9'
+    
+    def get_bucket_filename(self, token):
+        """Return the name of the file associated with the token."""
+        bucket = self._get_bucket_key(token)
+        return f"./main_index/bucket_{bucket}.json"
     
     def _initialize_bucketed_index(self):
         """Create empty bucketed structure"""
         return {bucket: {} for bucket in self.bucket_keys}
     
-    def add_document(self, doc_id, term, freq, fields):
+    def add_document(self, doc_id, token, freq, fields):
         """Add a single document to the current batched index."""
-        bucket_key = self._get_bucket_key(term)
+        bucket_key = self._get_bucket_key(token)
         
-        if term not in self.current_batch[bucket_key]:
-            self.current_batch[bucket_key][term] = {}
+        if token not in self.current_batch[bucket_key]:
+            self.current_batch[bucket_key][token] = {}
         
-        self.current_batch[bucket_key][term][doc_id] = {
-            'term_frequency': freq,
-            'fields': fields.copy()
-        }
+        self.current_batch[bucket_key][token][doc_id] = Posting()
+        self.current_batch[bucket_key][token][doc_id].add_entry(freq, fields)
     
     def save_batch_to_disk(self):
         """Save current batch to disk as partial files."""
         for bucket_key, bucket_data in self.current_batch.items():
-            if not bucket_data:  # Skip empty buckets
+            # skip empty buckets
+            if not bucket_data:
                 continue
             
-            # Create filename for this bucket's partial index
+            # create filename for this bucket's partial index
             filename = f'bucket_{bucket_key}_batch_{self.batch_count}.json'
             filepath = os.path.join(self.temp_dir, filename)
             
-            # Save to disk
+            # save to disk
             with open(filepath, 'w') as f:
-                json.dump(bucket_data, f, indent=2)
+                json.dump(bucket_data, f, indent=2, default=custom_encoder)
             
-            # Track this partial file
+            # track this partial file
             self.partial_files[bucket_key].append(filepath)
         
         self.batch_count += 1
         
-        # Reset current batch
+        # reset current batch
         self.current_batch = self._initialize_bucketed_index()
     
     def merge_bucket_files(self, bucket_key):
@@ -102,25 +106,22 @@ class BatchIndexer:
         for filepath in partial_files:
             # Load partial index
             with open(filepath, 'r') as f:
-                partial_data = json.load(f)
+                partial_data = json.load(f, object_hook=custom_decoder)
             
             # Merge into final bucket
-            for term, doc_postings in partial_data.items():
-                if term not in merged_bucket:
-                    merged_bucket[term] = {}
+            for token, doc_postings in partial_data.items():
+                if token not in merged_bucket:
+                    merged_bucket[token] = {}
                 
                 # Merge document postings
                 for doc_id, posting in doc_postings.items():
-                    if doc_id not in merged_bucket[term]:
-                        merged_bucket[term][doc_id] = {
-                            'term_frequency': posting['term_frequency'],
-                            'fields': posting['fields'].copy()
-                        }
+                    if doc_id not in merged_bucket[token]:
+                        merged_bucket[token][doc_id] = Posting()
+                        merged_bucket[token][doc_id].add_entry(posting.freq, posting.fields.copy())
                     else:
                         # Merge with existing (in case same doc appears in multiple batches)
-                        existing = merged_bucket[term][doc_id]
-                        existing['term_frequency'] += posting['term_frequency']
-                        existing['fields'].extend(posting['fields'])
+                        existing = merged_bucket[token][doc_id]
+                        existing.merge(posting.freq, posting.fields)
         
         return merged_bucket
     
@@ -139,7 +140,7 @@ class BatchIndexer:
             # Save final bucket file
             output_file = os.path.join(self.output_dir, f'bucket_{bucket_key}.json')
             with open(output_file, 'w') as f:
-                json.dump(merged_bucket, f)
+                json.dump(dict(sorted(merged_bucket.items())), f, default=custom_encoder)
             
             print(f"Bucket '{bucket_key}': {len(merged_bucket)} terms -> {output_file}")
         
@@ -157,7 +158,7 @@ class BatchIndexer:
                 if os.path.exists(filepath):
                     os.remove(filepath)
         
-        # Remove temp directory if empty
+        # remove temp directory if empty
         if os.path.exists(self.temp_dir) and not os.listdir(self.temp_dir):
             os.rmdir(self.temp_dir)
     
@@ -168,7 +169,7 @@ class BatchIndexer:
             filepath = os.path.join(self.output_dir, f'bucket_{bucket_key}.json')
             if os.path.exists(filepath):
                 with open(filepath, 'r') as f:
-                    data = json.load(f)
+                    data = json.load(f, object_hook=custom_decoder)
                 stats[bucket_key] = {
                     'terms': len(data),
                     'file_size_mb': os.path.getsize(filepath) / (1024 * 1024)
@@ -176,67 +177,9 @@ class BatchIndexer:
         return stats
 
 
-class Index:
+class URLIndex:
     def __init__(self):
         self.index = {}
-
-        for letter in string.ascii_lowercase:
-            self.index[letter] = {}
-        self.index["0-9"] = {}
-
-    def _get_dict_bucket(self, word):
-        first_char = word[0].lower()
-        if first_char >= 'a' and first_char <= 'z':
-            return first_char
-        else:
-            return "0-9"
-        
-    def _get_bucket_file(self, letter):
-        """Returns the file name for the bucket"""
-        return f"index/{letter}"
-
-    def add_entry(self, token, docid, freq, fields, position=None):
-        """Initializes token into self.index[bucket] with a Posting object
-        if not already initialized."""
-        bucket = self._get_dict_bucket(token)
-        # ensure token is in the bucket, adds if not
-        if token not in self.index[bucket]:
-            self.index[bucket][token] = {}
-            
-        # ensures docid is in token dict, initializes if not
-        if docid not in self.index[bucket][token]:
-            self.index[bucket][token][docid] = Posting()
-
-        # add to the posting of the docid for the token
-        self.index[bucket][token][docid].add_entry(freq, fields, position)
-
-    def _reset(self):
-        """Private function that will clear the index of all its entries
-        so it can be used for the next batch of urls that are processed."""
-        for letter in self.index:
-            self.index[letter] = {}
-
-    def write_to_file(self):
-        """Iterates each bucket. Opens the file for that bucket. Loads data from file.
-        Merge the current data with the data loaded. Write back to file. Reset index at the end"""
-        for letter in self.index:
-            file = self._get_bucket_file(letter)
-            with open(file, "r+") as outfile:
-                partial_data = json.load(outfile, object_hook=custom_decoder)
-                for term, posting in self.index[letter].items():
-                    if term not in partial_data:
-                        partial_data[term] = {}
-                    for id, post in posting.items():
-                        if id not in partial_data[term]:
-                            partial_data[term][id] = Posting()
-                        partial_data[term][id].add_entry(post.freq, post.fields, post.position)
-                outfile.write(json.dumps(dict(sorted(partial_data.items())), default=custom_encoder))
-        self._reset()
-
-
-class URLIndex(Index):
-    def __init__(self):
-        super().__init__()
         self.id = 0
 
     def add_entry(self, url):
@@ -261,3 +204,7 @@ class URLIndex(Index):
             return ids[0]
         else:
             raise Exception(IndexError, f"{url} not found in URL Index\n")
+        
+    def write_to_file(self, file):
+        with open(file, "w") as outfile:
+            json.dump(dict(sorted(self.index.items())), outfile, default=custom_encoder)
