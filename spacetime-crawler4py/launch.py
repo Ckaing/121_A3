@@ -10,7 +10,7 @@ from utils.config import Config
 from crawler import Crawler
 from index_vars import json_index, URL_id_index
 from analyze import write_analysis_to_file, indexer, batch_cnt, BATCH_SIZE
-from query import query, user_input, extract_terms
+from query import query, user_input, extract_terms, print_query_results
 
 
 
@@ -79,3 +79,9 @@ if __name__ == "__main__":
         total_size += info['file_size_mb']
     print(f"Total Tokens: {total_terms}")
     print(f"Total Size: {total_size}")
+
+    '''Example query usage after crawler ends:
+    str_input = user_input()
+    top_urls = query(extract_terms(str_input))
+    print_query_results(top_urls)
+    '''

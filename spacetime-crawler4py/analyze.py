@@ -67,7 +67,7 @@ def analysis(url, html_content):
     with json_index_lock:
         important_text = set()
         for tag in soup.find_all(['h1', 'h2', 'h3', 'title', 'strong']):
-            tag_tokens = tokenizer.tokenize(tag.get_text())
+            tag_tokens = tokenizer.tokenize_and_stem(tag.get_text())
             important_text.update(tag_tokens)
 
         for token, count in freq.items():
