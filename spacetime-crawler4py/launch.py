@@ -8,8 +8,8 @@ from argparse import ArgumentParser
 
 from utils.config import Config
 from crawler import Crawler
-from index_vars import json_index, URL_id_index
-from analyze import write_analysis_to_file, indexer, batch_cnt, BATCH_SIZE
+from index_vars import URL_id_index
+from analyze import write_analysis_to_file, indexer
 from query import query, user_input, extract_terms, print_query_results
 
 
@@ -33,18 +33,11 @@ def main(config_file, restart, json_dir=None):
     crawler.start()
     
     # makes sure to save the rest of the documents
-    if (batch_cnt % BATCH_SIZE != 0):
-        indexer.save_batch_to_disk()
+    indexer.save_batch_to_disk()
     # finally merge all the buckets into one index
     indexer.merge_all_buckets(cleanup_temp=True)
 
-    # write our analysis when our crawler ends
-    print("\n--- Final Statistics ---")
-    stats = indexer.get_final_stats()
-    for bucket, info in sorted(stats.items()):
-        print(f"Bucket '{bucket}': {info['terms']} terms, {info['file_size_mb']:.2f} MB")
-
-    json_index.write_to_file(file="inverted_index.json")
+    # json_index.write_to_file(file="inverted_index.json")
     URL_id_index.write_to_file(file="url_id_index.json")
     write_analysis_to_file()
 
@@ -68,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--json_dir", type=str, required=True, 
                        help="Path to directory containing JSON files")
     args = parser.parse_args()
-    # main(args.config_file, args.restart, args.json_dir)
+    main(args.config_file, args.restart, args.json_dir)
     total_terms = 0
     total_size = 0
     print("\n--- Final Statistics ---")
@@ -78,7 +71,7 @@ if __name__ == "__main__":
         total_terms += info['terms']
         total_size += info['file_size_mb']
     print(f"Total Tokens: {total_terms}")
-    print(f"Total Size: {total_size}")
+    print(f"Total Size: {total_size:.2f} MB")
 
     '''Example query usage after crawler ends:
     str_input = user_input()
