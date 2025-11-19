@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from index_vars import json_index, URL_id_index, url_index_lock, json_index_lock
 from threading import Lock
 import os
-from batch_index import BatchIndexer
+from index import BatchIndexer
 
 import tokenizer
 
