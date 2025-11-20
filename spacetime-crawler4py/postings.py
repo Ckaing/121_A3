@@ -10,7 +10,6 @@ class Posting:
         self.fields = fields
         self.position = positions
 
-    def merge(self, freq, fields, positions=None):
+    def merge(self, freq, fields):
         self.freq += freq
-        self.fields.extend(fields)
-        self.position.extend(positions)
+        self.fields += fields
