@@ -29,9 +29,6 @@ def query(q):
 
     # Stem all query terms
     stemmed_query = [stemmer.stem(term) for term in q]
-
-    with open("inverted_index.json", 'r') as f:
-        index = json.load(f)
     
     # Load URL mapping
     with open("url_id_index.json", 'r') as f:
@@ -39,8 +36,20 @@ def query(q):
 
     total_docs = len(url_mapping)
     all_postings = {}
+    doc_term_count = {}
 
     for word in stemmed_query:
+        #Impliment opening file for batches here
+        first_char = word[0].lower()
+        if not first_char.isalpha():
+            first_char = '0-9'
+
+        json_file_path = "main_index/bucket_" + first_char + ".json"
+
+        with open(json_file_path, 'r') as f:
+            index = json.load(f)
+
+        
         if word in index:
             # Calculate IDF: log(total_docs / docs_containing_term)
             doc_freq = len(index[word])  # Number of docs containing this term
@@ -51,7 +60,7 @@ def query(q):
                 fields = posting_data.get('fields') or []
                 
                 # TF-IDF score
-                score = tf * idf
+                score = (1 + math.log10(tf)) * idf if tf > 0 else 0
                 
                 # Boost for important fields (titles, headers)
                 if fields and 'important' in fields:
@@ -62,15 +71,20 @@ def query(q):
                     all_postings[docid] += score
                 else:
                     all_postings[docid] = score
+                
+                doc_term_count[docid] = doc_term_count.get(docid, 0) + 1
     
     # Boost documents that match multiple query terms
     if len(stemmed_query) > 1:
         for docid in all_postings:
             # Count how many query terms appear in this document
-            terms_matched = sum(1 for word in stemmed_query if docid in index.get(word, {}))
+            terms_matched = doc_term_count.get(docid, 0)
             if terms_matched > 1:
                 # Give 30% boost for each additional term matched
                 all_postings[docid] *= (1 + 0.3 * (terms_matched - 1))
+            if terms_matched < len(stemmed_query):
+                match_ratio = terms_matched / len(stemmed_query) # Penalty for partial matches
+                all_postings[docid] *= (0.1 + 0.4 * match_ratio) # Scale between 0.1 to 0.5
     
     # Sort by score (descending) and get top 5
     top_docids = sorted(all_postings.items(), 
