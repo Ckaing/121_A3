@@ -2,6 +2,12 @@
     width:50%;
 }
 
+.result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 body {
     width:90%;
     margin:auto;

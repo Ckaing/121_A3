@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
     <h2>Results</h2>
-    {% if results and results|length > 0 %}
-        {% for r in results %}
+    {% if results and results['urls']|length > 0 %}
+        {% for url, score in results['urls'] %}
             <div class="result">
-                <p>URL: {{ r.url }}</p>
+                <p>URL: {{ url }}</p>
+                <p>Score: {{ score|round(5) }}</p>
             </div>
             <hr>
         {% endfor %}
+        <br>
+        <p>Query time for "{{results['query']}}": {{results['time']}} seconds</p>
     {% else %}
         <p>No match found. Try a different query.</p>
     {% endif %}

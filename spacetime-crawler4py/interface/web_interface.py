@@ -1,15 +1,23 @@
 from flask import Flask, render_template, request
+import time
 
-#TODO replace with actual search
-from tmp_search_result import process_query
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from query import query as process_query
+from query import extract_terms
+
 
 app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        query = request.form['user_query'] # Get data from the form
-        results = process_query(query)
+        query = request.form['user_query']
+        start_time = time.time()
+        urls = process_query(extract_terms(query))
+        time_elapsed = time.time() - start_time
+        results = {'urls': urls, 'time':time_elapsed, 'query':query}
         return render_template('result.html', results=results)
     return render_template('index.html')
 
