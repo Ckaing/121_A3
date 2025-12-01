@@ -4,8 +4,8 @@ import time
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from query import query as process_query
-from query import extract_terms
+from query import process_query
+# from query import extract_terms
 
 
 app = Flask(__name__)
@@ -15,7 +15,7 @@ def index():
     if request.method == 'POST':
         query = request.form['user_query']
         start_time = time.time()
-        urls = process_query(extract_terms(query))
+        urls = process_query.query(query)
         time_elapsed = time.time() - start_time
         results = {'urls': urls, 'time':time_elapsed, 'query':query}
         return render_template('result.html', results=results)

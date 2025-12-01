@@ -10,7 +10,7 @@ from utils.config import Config
 from crawler import Crawler
 from index_vars import URL_id_index
 from analyze import write_analysis_to_file, indexer
-from query import query, user_input, extract_terms, print_query_results
+from query import Query
 
 
 
@@ -41,17 +41,6 @@ def main(config_file, restart, json_dir=None):
     URL_id_index.write_to_file(file="url_id_index.json")
     write_analysis_to_file()
 
-    # get user input and query
-    user_in = user_input()
-    # keep track of query time after user clicks enter
-    start_time = time.time()
-    tokens = extract_terms(user_in)
-    urls = query(tokens)
-    ### print/display the urls here ###
-    end_time = time.time()
-    time_elapsed = end_time - start_time
-    print(f"Total query time for '{user_in}': {time_elapsed:.2f} seconds")
-
 
 if __name__ == "__main__":
     # multiprocessing.set_start_method('fork', force=True)
@@ -61,20 +50,15 @@ if __name__ == "__main__":
     parser.add_argument("--json_dir", type=str, required=True, 
                        help="Path to directory containing JSON files")
     args = parser.parse_args()
-    main(args.config_file, args.restart, args.json_dir)
-    total_terms = 0
-    total_size = 0
-    print("\n--- Final Statistics ---")
-    stats = indexer.get_final_stats()
-    for bucket, info in sorted(stats.items()):
-        print(f"Bucket '{bucket}': {info['terms']} terms, {info['file_size_mb']:.2f} MB")
-        total_terms += info['terms']
-        total_size += info['file_size_mb']
-    print(f"Total Tokens: {total_terms}")
-    print(f"Total Size: {total_size:.2f} MB")
+    # main(args.config_file, args.restart, args.json_dir)
 
-    '''Example query usage after crawler ends:
-    str_input = user_input()
-    top_urls = query(extract_terms(str_input))
-    print_query_results(top_urls)
-    '''
+    query_results = Query()
+    str_input = ""
+    while (str_input != "exit"):
+        str_input = query_results.user_input()
+        start_time = time.time()
+        top_urls = query_results.query(str_input)
+        query_results.print_query_results(top_urls)
+        end_time = time.time()
+        time_elapsed = end_time - start_time
+        print(f"Total query time for '{str_input}': {time_elapsed:.4f} seconds")
