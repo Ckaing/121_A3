@@ -5,6 +5,7 @@ import math
 import string
 from collections import OrderedDict
 import heapq
+import time
 
 
 class Query:
@@ -41,7 +42,9 @@ class Query:
         return bucket
         
     def _compute_idf(self):
+        start_time = time.time()
         for letter in string.ascii_lowercase:
+            print(letter)
             json_file_path = f"main_index/bucket_{letter}.json"
 
             with open(json_file_path, 'r') as f:
@@ -50,6 +53,9 @@ class Query:
             for term, posting in index.items():
                 doc_freq = len(posting)  # Number of docs containing this term
                 self.idf_cache[term] = math.log10(self.total_docs / doc_freq) if doc_freq > 0 else 0
+        done = time.time()
+        elapsed = done - start_time
+        print(f"letters computed in: {elapsed:.4f}")
         
         json_file_path = f"main_index/bucket_0-9.json"
 

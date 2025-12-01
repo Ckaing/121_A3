@@ -10,7 +10,7 @@ from utils.config import Config
 from crawler import Crawler
 from index_vars import URL_id_index
 from analyze import write_analysis_to_file, indexer
-from query import Query
+from query import process_query
 
 
 
@@ -51,14 +51,12 @@ if __name__ == "__main__":
                        help="Path to directory containing JSON files")
     args = parser.parse_args()
     # main(args.config_file, args.restart, args.json_dir)
-
-    query_results = Query()
     str_input = ""
     while (str_input != "exit"):
-        str_input = query_results.user_input()
+        str_input = process_query.user_input()
         start_time = time.time()
-        top_urls = query_results.query(str_input)
-        query_results.print_query_results(top_urls)
+        top_urls = process_query.query(str_input)
+        process_query.print_query_results(top_urls)
         end_time = time.time()
         time_elapsed = end_time - start_time
         print(f"Total query time for '{str_input}': {time_elapsed:.4f} seconds")
