@@ -1,4 +1,8 @@
 cbor
 requests
 
+url_id_index.json
+main_index/
+
 nltk
+orjson
