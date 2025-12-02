@@ -66,6 +66,16 @@ def extract_next_links(filepath, json_dir, url_to_file_map):
         if len(html_content) < 500:
             return []
 
+        # parse text
+        soup = BeautifulSoup(html_content, 'html.parser') 
+        for tag in soup(['script', 'style', 'noscript']):
+            tag.decompose()
+        # do analysis
+        text = soup.get_text(separator=' ', strip=True)
+        # if page is similar to previous pages, do not analyze/extract links
+        if similarity_checker.similar(text):
+            return []
+
         # do analysis
         analysis(url, html_content)
 
