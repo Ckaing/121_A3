@@ -3,7 +3,7 @@ from threading import Lock
 from collections import defaultdict
 
 class PageRanker:
-    def __init__(self, filename='pagerank.json'):
+    def __init__(self, filename='page_rank.json'):
         self.page_outlinks = defaultdict(set)
         self.page_rank_lock = Lock()
         self.save_path = filename
@@ -50,12 +50,12 @@ class PageRanker:
 
 
     def _save_page_rank(self, pagerank):
-        with open(self.save_path, "wb", encoding="utf-8") as f:
+        with open(self.save_path, 'w', encoding='utf-8') as f:
             orjson.dump(pagerank, f)
     
 
     def compute_rank(self, URL_id_index_path):
-        with open(URL_id_index_path, 'rb') as f:
+        with open(URL_id_index_path, 'r') as f:
             URL_id_index = orjson.loads(f.read())
         pr = self._calculate_page_rank(URL_id_index)
         self._save_page_rank(pr)

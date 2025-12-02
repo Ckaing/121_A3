@@ -9,10 +9,15 @@ import time
 
 
 class Query:
-    
-    def __init__(self, max_cache=5) -> None:
-        with open("url_id_index.json", 'r') as f:
+    def __init__(self, url_id_filename='', page_rank_filename='', max_cache=5) -> None:
+        #TODO mayeb accept these filenames as parameters
+        with open(url_id_filename, 'r') as f:
             self.url_mapping = orjson.loads(f.read())
+        try:
+            with open(page_rank_filename, 'r') as f:
+                self.page_rank = orjson.loads(f.read())
+        except FileNotFoundError:
+            self.page_rank = {}
         self.idf_cache = {}
         self.bucket_cache = OrderedDict()
         self.total_docs = len(self.url_mapping)
@@ -125,6 +130,12 @@ class Query:
                 if terms_matched < len(stemmed_query):
                     match_ratio = terms_matched / len(stemmed_query) # Penalty for partial matches
                     all_postings[docid] *= (0.1 + 0.4 * match_ratio) # Scale between 0.1 to 0.5
+
+        alpha = 0.5  # weight for PageRank TODO idk how to incorporate it the slides did not say so this is temporary
+        for docid in all_postings:
+            url = self.url_mapping.get(str(docid))
+            pr_score = self.page_rank.get(url, 0) 
+            all_postings[docid] *= (1 + alpha * pr_score)
 
         # Sort by score (descending) and get top 5
         top_docids = heapq.nlargest(5, all_postings.items(), key=lambda x: x[1])
