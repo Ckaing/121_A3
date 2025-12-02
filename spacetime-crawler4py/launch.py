@@ -8,11 +8,10 @@ from argparse import ArgumentParser
 
 from utils.config import Config
 from crawler import Crawler
-from index_vars import URL_id_index
+
+from index_vars import URL_id_index, page_rank
 from analyze import write_analysis_to_file, indexer
 from query import process_query
-
-
 
 
 def main(config_file, restart, json_dir=None):
@@ -39,6 +38,7 @@ def main(config_file, restart, json_dir=None):
 
     # json_index.write_to_file(file="inverted_index.json")
     URL_id_index.write_to_file(file="url_id_index.json")
+    page_rank.compute_rank("url_id_index.json")
     write_analysis_to_file()
 
 
