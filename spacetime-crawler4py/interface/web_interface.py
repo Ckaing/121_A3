@@ -5,8 +5,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from query import process_query
-# from query import extract_terms
-
 
 app = Flask(__name__)
 

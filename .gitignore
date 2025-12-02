@@ -1,4 +1,7 @@
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
 
 main_index/
 url_id_index.json
