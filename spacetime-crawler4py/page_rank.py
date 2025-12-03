@@ -14,7 +14,7 @@ class PageRanker:
 
     # on slide27 lec24, it says in practice ~5 iterations is sufficient
     def _calculate_page_rank(self, damping=0.85, iter=5):
-        pages = list(page_outlinks.keys())
+        pages = list(self.page_outlinks.keys())
         n = len(pages)
 
         if n == 0:
