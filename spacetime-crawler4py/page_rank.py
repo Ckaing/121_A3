@@ -34,7 +34,7 @@ class PageRanker:
             for p in pages:
                 rank_sum = 0
                 # sum contributions from in-links (sum j=1...N: (Lij/cj)*pj)
-                for src, outlinks in self.page_outgoing_links.items():
+                for src, outlinks in self.page_outlinks.items():
                     if p in outlinks: # Lij
                         outdeg = len(outlinks)  # C(Ti)
                         if outdeg > 0:
@@ -48,14 +48,10 @@ class PageRanker:
 
         return pr
 
-
     def _save_page_rank(self, pagerank):
         with open(self.save_path, 'w', encoding='utf-8') as f:
-            orjson.dump(pagerank, f)
-    
+            orjson.dumps(pagerank, f)
 
-    def compute_rank(self, URL_id_index_path):
-        with open(URL_id_index_path, 'r') as f:
-            URL_id_index = orjson.loads(f.read())
-        pr = self._calculate_page_rank(URL_id_index)
+    def compute_rank(self):
+        pr = self._calculate_page_rank()
         self._save_page_rank(pr)
