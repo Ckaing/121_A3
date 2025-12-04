@@ -117,18 +117,6 @@ class Query:
                 # Accumulate scores for documents
                 all_postings[docid] = all_postings.get(docid, 0) + score
                 doc_term_count[docid] = doc_term_count.get(docid, 0) + 1
-        
-        # Boost documents that match multiple query terms
-        if len(stemmed_query) > 1:
-            for docid in all_postings:
-                # Count how many query terms appear in this document
-                terms_matched = doc_term_count.get(docid, 0)
-                if terms_matched > 1:
-                    # Give 30% boost for each additional term matched
-                    all_postings[docid] *= (1 + 0.3 * (terms_matched - 1))
-                if terms_matched < len(stemmed_query):
-                    match_ratio = terms_matched / len(stemmed_query) # Penalty for partial matches
-                    all_postings[docid] *= (0.1 + 0.4 * match_ratio) # Scale between 0.1 to 0.5
 
         alpha = 0.5  # weight for PageRank TODO idk how to incorporate it the slides did not say so this is temporary
         for docid in all_postings:
