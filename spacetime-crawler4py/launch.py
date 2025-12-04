@@ -38,7 +38,7 @@ def main(config_file, restart, json_dir=None):
 
     # json_index.write_to_file(file="inverted_index.json")
     URL_id_index.write_to_file(file="url_id_index.json")
-    page_rank.compute_rank("url_id_index.json")
+    page_rank.compute_rank()
     write_analysis_to_file()
 
 
@@ -54,6 +54,8 @@ if __name__ == "__main__":
     str_input = ""
     while (str_input != "exit"):
         str_input = process_query.user_input()
+        if (str_input == "exit"):
+            break
         start_time = time.time()
         top_urls = process_query.query(str_input)
         process_query.print_query_results(top_urls)
