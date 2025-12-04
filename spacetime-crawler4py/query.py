@@ -9,7 +9,7 @@ import time
 
 
 class Query:
-    def __init__(self, url_id_filename='', page_rank_filename='', max_cache=5) -> None:
+    def __init__(self, url_id_filename='url_id_index.json', page_rank_filename='', max_cache=5) -> None:
         #TODO mayeb accept these filenames as parameters
         with open(url_id_filename, 'r') as f:
             self.url_mapping = orjson.loads(f.read())
@@ -49,7 +49,6 @@ class Query:
     def _compute_idf(self):
         start_time = time.time()
         for letter in string.ascii_lowercase:
-            print(letter)
             json_file_path = f"main_index/bucket_{letter}.json"
 
             with open(json_file_path, 'r') as f:
