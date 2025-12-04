@@ -14,7 +14,7 @@ class Query:
         with open(url_id_filename, 'r') as f:
             self.url_mapping = orjson.loads(f.read())
         try:
-            with open(page_rank_filename, 'r') as f:
+            with open(page_rank_filename, "rb") as f:
                 self.page_rank = orjson.loads(f.read())
         except FileNotFoundError:
             self.page_rank = {}
