@@ -49,8 +49,9 @@ class PageRanker:
         return pr
 
     def _save_page_rank(self, pagerank):
-        with open(self.save_path, 'w', encoding='utf-8') as f:
-            orjson.dumps(pagerank, f)
+        with open(self.save_path, "wb") as f:
+            json_bytes = orjson.dumps(pagerank)
+            f.write(json_bytes)
 
     def compute_rank(self):
         pr = self._calculate_page_rank()
