@@ -73,7 +73,8 @@ def extract_next_links(filepath, json_dir, url_to_file_map):
         # do analysis
         text = soup.get_text(separator=' ', strip=True)
         # if page is similar to previous pages, do not analyze/extract links
-        if similarity_checker.similar(text):
+        # if similarity_checker.similar(text): NOTE uncomment
+        if similarity_checker.similar(text, filepath=filepath):
             return []
 
         # do analysis

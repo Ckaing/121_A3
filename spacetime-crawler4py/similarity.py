@@ -8,19 +8,22 @@ class ThreeGram(object):
     def __init__(self, capacity=50, threshold=0.9):
         self.SIMILARITY_THRESHOLD = threshold
         self.prev_pages = deque(maxlen=capacity)
+        self.tmp_prev_filepath = deque(maxlen=capacity) # NOTE DELETE THIS, THIS IS JUST FOR TESTING
         self.lock = RLock()
 
-    def similar(self, content):
+    def similar(self, content, filepath=''):
         tokens = tokenize(content)
         if tokens is None:
             return False
         gram = self.get_3gram(tokens)
         with self.lock: # for controlling access to prev_pages
-            for prev in self.prev_pages:
-                score = self.similarity_score(prev, gram)
+            for i in range(len(self.prev_pages)): # NOTE change back to 'for prev in self.prev_pages'
+                score = self.similarity_score(self.prev_pages[i], gram) # NOTE change back to 'score = self.similarity_score(prev, gram)'
                 if score >= self.SIMILARITY_THRESHOLD:
+                    self.log_similar(filepath, self.tmp_prev_filepath[i], score) # NOTE DELETE LATER
                     return True
             self.prev_pages.append(gram)
+            self.tmp_prev_filepath.append(filepath) # NOTE DELTE LATER
         return False
 
     def get_3gram(self, tokens):
@@ -38,3 +41,16 @@ class ThreeGram(object):
             return 0
         similarity_score = intersection / union 
         return similarity_score
+
+    # NOTE DELETE LATER
+    def log_similar(self, fp1, fp2, score, folder='tmp_similar_log/'):
+        try:
+            with open(folder + 'file_paths.txt', 'a') as f:
+                f.write('SCORE: ' + str(score) + '\n')
+                f.write('PATH1: ' + fp1 + '\n')
+                f.write('PATH2: ' + fp2 + '\n')
+                f.write('\n\n\n')
+
+        except Exception as e:
+            print('Error writing log, just didn\'t want to crash program')
+            print('Error:', str(e))
