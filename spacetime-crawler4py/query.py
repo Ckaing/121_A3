@@ -118,11 +118,11 @@ class Query:
                 all_postings[docid] = all_postings.get(docid, 0) + score
                 doc_term_count[docid] = doc_term_count.get(docid, 0) + 1
 
-        alpha = 0.5  # weight for PageRank TODO idk how to incorporate it the slides did not say so this is temporary
+        # add page rank to tf-idf
         for docid in all_postings:
             url = self.url_mapping.get(str(docid))
             pr_score = self.page_rank.get(url, 0) 
-            all_postings[docid] *= (1 + alpha * pr_score)
+            all_postings[docid] += pr_score
 
         # Sort by score (descending) and get top 5
         top_docids = heapq.nlargest(5, all_postings.items(), key=lambda x: x[1])
