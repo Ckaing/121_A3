@@ -3,6 +3,7 @@ from threading import RLock
 
 from tokenizer import tokenize
 
+similarity_checker = ThreeGram()
 
 class ThreeGram(object):
     def __init__(self, capacity=50, threshold=0.9):

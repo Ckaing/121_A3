@@ -10,6 +10,8 @@ from analyze import analysis
 # Suppress XML warnings
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
+from threegram import similarity_checker
+
 
 def scraper(filepath, json_dir, url_to_file_map):
     """ 
