@@ -35,8 +35,8 @@ class ThreeGram(object):
 
     def similarity_score(self, gram_1, gram_2):
         intersection = len(gram_1 & gram_2)
-        # union = |A| + |B| + |A and B| --> that way we don't waste time computing A | B
-        union = len(gram_1) + len(gram_2) + intersection
+        # union = |A| + |B| - |A and B| --> that way we don't waste time computing A | B
+        union = len(gram_1) + len(gram_2) - intersection
         if union == 0:
             return 0
         similarity_score = intersection / union 
