@@ -5,7 +5,7 @@ from tokenizer import tokenize
 
 
 class ThreeGram(object):
-    def __init__(self, capacity=50, threshold=0.9):
+    def __init__(self, capacity=50, threshold=0.95):
         self.SIMILARITY_THRESHOLD = threshold
         self.prev_pages = deque(maxlen=capacity)
         self.tmp_prev_filepath = deque(maxlen=capacity) # NOTE DELETE THIS, THIS IS JUST FOR TESTING
