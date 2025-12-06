@@ -9,10 +9,15 @@ import time
 
 
 class Query:
-    
-    def __init__(self, max_cache=5) -> None:
-        with open("url_id_index.json", 'r') as f:
+    def __init__(self, url_id_filename='url_id_index.json', page_rank_filename='', max_cache=5) -> None:
+        #TODO mayeb accept these filenames as parameters
+        with open(url_id_filename, 'r') as f:
             self.url_mapping = orjson.loads(f.read())
+        try:
+            with open(page_rank_filename, "rb") as f:
+                self.page_rank = orjson.loads(f.read())
+        except FileNotFoundError:
+            self.page_rank = {}
         self.idf_cache = {}
         self.bucket_cache = OrderedDict()
         self.total_docs = len(self.url_mapping)
@@ -43,7 +48,6 @@ class Query:
         
     def _compute_idf(self):
         for letter in string.ascii_lowercase:
-            print(letter)
             json_file_path = f"main_index/bucket_{letter}.json"
 
             with open(json_file_path, 'r') as f:
@@ -109,18 +113,12 @@ class Query:
                 # Accumulate scores for documents
                 all_postings[docid] = all_postings.get(docid, 0) + score
                 doc_term_count[docid] = doc_term_count.get(docid, 0) + 1
-        
-        # Boost documents that match multiple query terms
-        if len(stemmed_query) > 1:
-            for docid in all_postings:
-                # Count how many query terms appear in this document
-                terms_matched = doc_term_count.get(docid, 0)
-                if terms_matched > 1:
-                    # Give 30% boost for each additional term matched
-                    all_postings[docid] *= (1 + 0.3 * (terms_matched - 1))
-                if terms_matched < len(stemmed_query):
-                    match_ratio = terms_matched / len(stemmed_query) # Penalty for partial matches
-                    all_postings[docid] *= (0.1 + 0.4 * match_ratio) # Scale between 0.1 to 0.5
+
+        # add page rank to tf-idf
+        for docid in all_postings:
+            url = self.url_mapping.get(str(docid))
+            pr_score = self.page_rank.get(url, 0) 
+            all_postings[docid] += pr_score
 
         # Sort by score (descending) and get top 5
         top_docids = heapq.nlargest(5, all_postings.items(), key=lambda x: x[1])

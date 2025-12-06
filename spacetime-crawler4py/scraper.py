@@ -5,7 +5,9 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, parse_qs, urlencode, urljoin, urldefrag
 from bs4 import XMLParsedAsHTMLWarning
 import warnings
+
 from analyze import analysis
+from index_vars import page_rank
 
 # Suppress XML warnings
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
@@ -72,6 +74,8 @@ def extract_next_links(filepath, json_dir, url_to_file_map):
         # parse with BeautifulSoup for links
         soup = BeautifulSoup(html_content, 'html.parser')
         found_files = []
+        outgoing_urls = set()
+
         # extract links from HTML content
         for a in soup.find_all('a', href=True):
             href = a['href']
@@ -89,6 +93,9 @@ def extract_next_links(filepath, json_dir, url_to_file_map):
                 
                 # Normalize the URL
                 absolute_url = normalize_url(absolute_url)
+
+                # add outgoing links for PR
+                outgoing_urls.add(absolute_url) 
                 
                 # Look up the corresponding file in our mapping
                 target_file = url_to_file_map.get(absolute_url)
@@ -97,6 +104,8 @@ def extract_next_links(filepath, json_dir, url_to_file_map):
 
             except Exception as e:
                 continue
+
+        page_rank.update_links(url, outgoing_urls)
 
         return found_files
     except Exception as e:
